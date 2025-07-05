@@ -50,6 +50,7 @@ jobs:
 
       - name: Compute build‐tag as today’s date
         id: get_date
+        shell: bash
         run: |
           echo "date=$(TZ='Europe/Berlin' date +%F)" >> $GITHUB_OUTPUT
 
