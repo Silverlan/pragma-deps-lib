@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Setup Pragma
         uses: Silverlan/pragma/github_actions/setup@main
+        with:
+          branch: 'develop'
 
       - name: Build Pragma
         uses: Silverlan/pragma/github_actions/build@main
