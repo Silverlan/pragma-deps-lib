@@ -34,7 +34,7 @@ jobs:
         uses: Silverlan/pragma/github_actions/build@main
         id: build-pragma
         with:
-          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-networking --with-lua-debugger=0 --with-swiftshader --build=0 --build-all"
+          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-networking --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only"
           with-lua-debugger: 1
 
       - name: Create Release Archive
