@@ -1,6 +1,12 @@
 name: Build Linux Binaries
 on:
   workflow_dispatch:
+    inputs:
+      pragma_branch:
+        description: 'Which branch of Pragma to use'
+        required: true
+        default: 'develop'
+        type: string
 
 permissions:
   contents: write
@@ -30,7 +36,7 @@ jobs:
       - name: Setup Pragma
         uses: Silverlan/pragma/github_actions/setup@main
         with:
-          branch: 'develop'
+          branch: '${{ inputs.pragma_branch }}'
 
       - name: Build Pragma
         uses: Silverlan/pragma/github_actions/build@main
