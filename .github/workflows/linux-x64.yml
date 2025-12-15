@@ -37,6 +37,7 @@ jobs:
         uses: Silverlan/pragma/github_actions/setup@develop
         with:
           branch: '${{ inputs.pragma_branch }}'
+          with_system_gcc: '1'
 
       - name: Install Cuda
         uses: Jimver/cuda-toolkit@v0.2.23
