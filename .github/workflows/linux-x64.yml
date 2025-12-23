@@ -60,7 +60,13 @@ jobs:
         shell: bash
         run: |
           curDir="$PWD"
-          cd "${{ steps.build-pragma.outputs.deps-dir }}/staging"
+
+          stagingDir="${{ steps.build-pragma.outputs.deps-dir }}/staging"
+          # We have limited space for GitHub releases, so these will be downloaded by the build script separately.
+          rm -rf "$stagingDir/clang"
+          rm -rf "$stagingDir/cmake"
+
+          cd "$stagingDir"
           tar -czvf lib-linux_x64.tar.gz *
           mv "${{ steps.build-pragma.outputs.deps-dir }}/staging/lib-linux_x64.tar.gz" "$curDir/"
 
