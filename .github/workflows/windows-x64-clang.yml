@@ -1,0 +1,105 @@
+name: Build Windows Binaries (Clang)
+on:
+  workflow_dispatch:
+    inputs:
+      pragma_branch:
+        description: 'Which branch of Pragma to use'
+        required: true
+        default: 'develop'
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  # See https://github.com/git-lfs/git-lfs/issues/5749
+  GIT_CLONE_PROTECTION_ACTIVE: 'false'
+
+jobs:
+  build:
+    permissions:
+      actions: write
+      contents: write
+      issues: read
+      pull-requests: read
+
+    name: Build - ${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: windows-latest
+            name: "Windows Latest"
+
+    steps:
+      - name: Setup Pragma
+        uses: Silverlan/pragma/github_actions/setup@develop
+        with:
+          branch: '${{ inputs.pragma_branch }}'
+
+      - name: Clone setup_cuda repository
+        shell: bash
+        run: git clone https://github.com/Silverlan/setup_cuda.git
+
+      - name: Install Cuda
+        shell: pwsh
+        run: setup_cuda/setup_cuda.ps1
+        env:
+            INPUT_CUDA_VERSION: "12.5.0"
+
+      - name: Build Pragma
+        uses: Silverlan/pragma/github_actions/build@develop
+        id: build-pragma
+        with:
+          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only --clean-deps-build-files --toolset=clang"
+          with-lua-debugger: 1
+
+      - name: Create Release Archive
+        shell: bash
+        run: |
+          curDir="$PWD"
+          
+          stagingDir="${{ steps.build-pragma.outputs.deps-dir }}/staging"
+          # We have limited space for GitHub releases, so these will be downloaded by the build script separately.
+          rm -rf "$stagingDir/clang"
+          rm -rf "$stagingDir/cmake"
+
+          7z a lib-windows_x64-clang.zip "$stagingDir/**"
+
+      - name: Generate nightly tag description
+        shell: bash
+        run:   |
+          printf "Pre-built third-party libraries for Pragma." > tag_text.txt
+
+      - name: Compute build‐tag as today’s date
+        id: get_date
+        shell: bash
+        run: |
+          echo "date=$(TZ='Europe/Berlin' date +%F)" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: "pragma-deps-lib"
+
+      - name: Create Tag
+        uses: Silverlan/common_actions/create_tag@main
+        with:
+          tag_name: "${{ steps.get_date.outputs.date }}"
+          path: "pragma-deps-lib"
+
+      - name: Update nightly tag description
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          body_path: tag_text.txt
+          tag_name: "${{ steps.get_date.outputs.date }}"
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+
+      - name: Update nightly release
+        uses: pyTooling/Actions/releaser/composite@v4.2.2
+        with:
+          tag: "${{ steps.get_date.outputs.date }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: "lib-windows_x64-clang.zip"
