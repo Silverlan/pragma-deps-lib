@@ -23,14 +23,15 @@ jobs:
       issues: read
       pull-requests: read
 
-    name: Build - ${{ matrix.config.os }}
+    name: Build - ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
         config:
           - os: ubuntu-latest
-            name: "Ubuntu Latest"
+            name: "Linux - clang"
+            toolset: "clang"
 
     steps:
       - name: Setup Pragma
@@ -53,7 +54,7 @@ jobs:
         uses: Silverlan/pragma/github_actions/build@develop
         id: build-pragma
         with:
-          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only --clean-deps-build-files"
+          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only --clean-deps-build-files --toolset=${{ matrix.config.toolset }}"
           with-lua-debugger: 1
 
       - name: Create Release Archive
@@ -67,8 +68,8 @@ jobs:
           rm -rf "$stagingDir/cmake"
 
           cd "$stagingDir"
-          tar -czvf lib-linux_x64.tar.gz *
-          mv "${{ steps.build-pragma.outputs.deps-dir }}/staging/lib-linux_x64.tar.gz" "$curDir/"
+          tar -czvf lib-linux-x64-${{ matrix.config.toolset }}.tar.gz *
+          mv "${{ steps.build-pragma.outputs.deps-dir }}/staging/lib-linux-x64-${{ matrix.config.toolset }}.tar.gz" "$curDir/"
 
       - name: Generate nightly tag description
         shell: bash
@@ -105,4 +106,4 @@ jobs:
         with:
           tag: "${{ steps.get_date.outputs.date }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: "lib-linux_x64.tar.gz"
+          files: "lib-linux-x64-${{ matrix.config.toolset }}.tar.gz"
