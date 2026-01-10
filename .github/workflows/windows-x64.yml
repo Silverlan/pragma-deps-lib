@@ -23,14 +23,18 @@ jobs:
       issues: read
       pull-requests: read
 
-    name: Build - ${{ matrix.config.os }}
+    name: Build - ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
         config:
           - os: windows-latest
-            name: "Windows Latest"
+            name: "Windows - msvc"
+            toolset: "msvc"
+          - os: windows-latest
+            name: "Windows - clang"
+            toolset: "clang"
 
     steps:
       - name: Setup Pragma
@@ -52,7 +56,7 @@ jobs:
         uses: Silverlan/pragma/github_actions/build@develop
         id: build-pragma
         with:
-          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only --clean-deps-build-files --toolset=msvc"
+          build-args: "--with-pfm --with-all-pfm-modules --with-vr --with-lua-debugger=0 --with-swiftshader --build=0 --build-all --deps-only --clean-deps-build-files --toolset=${{ matrix.config.toolset }}"
           with-lua-debugger: 1
 
       - name: Create Release Archive
@@ -65,7 +69,7 @@ jobs:
           rm -rf "$stagingDir/clang"
           rm -rf "$stagingDir/cmake"
 
-          7z a lib-windows_x64.zip "$stagingDir/**"
+          7z a "lib-windows-x64-${{ matrix.config.toolset }}.zip" "$stagingDir/**"
 
       - name: Generate nightly tag description
         shell: bash
@@ -102,5 +106,4 @@ jobs:
         with:
           tag: "${{ steps.get_date.outputs.date }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: "lib-windows_x64.zip"
-
+          files: "lib-windows-x64-${{ matrix.config.toolset }}.zip"
