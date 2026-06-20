@@ -7,6 +7,14 @@ on:
         required: true
         default: 'develop'
         type: string
+      runner_os:
+        description: 'Runner OS to use'
+        required: false
+        default: 'ubuntu-24.04'
+        type: choice
+        options:
+          - ubuntu-24.04
+          - ubuntu-latest
 
 permissions:
   contents: write
@@ -29,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - os: ubuntu-latest
+          - os: ${{ inputs.runner_os || 'ubuntu-24.04' }}
             name: "Linux - clang"
             toolset: "clang"
 
