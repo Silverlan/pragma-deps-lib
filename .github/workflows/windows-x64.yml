@@ -29,10 +29,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows - msvc"
             toolset: "msvc"
-          - os: windows-latest
+          - os: windows-2022
             name: "Windows - clang"
             toolset: "clang"
 
